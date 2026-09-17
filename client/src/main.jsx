@@ -14,3 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// The spinner painted by index.html covers the gap between the HTML arriving
+// and React's first frame. Remove it now that there is something to look at.
+document.getElementById('boot')?.remove();

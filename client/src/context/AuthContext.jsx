@@ -156,9 +156,18 @@ export const AuthProvider = ({ children }) => {
     [persist]
   );
 
+  /**
+   * Adopt a user document an endpoint just returned.
+   *
+   * Endpoints other than /auth/me also answer with the full, updated account —
+   * uploading a verification document, for instance. Handing it straight to
+   * the context keeps every screen in sync without a second round trip.
+   */
+  const applyUser = useCallback((nextUser) => persist(null, nextUser), [persist]);
+
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, updateProfile, setUser }),
-    [user, loading, login, register, logout, updateProfile]
+    () => ({ user, loading, login, register, logout, updateProfile, applyUser, setUser }),
+    [user, loading, login, register, logout, updateProfile, applyUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

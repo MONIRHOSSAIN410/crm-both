@@ -26,7 +26,7 @@ const AuthShell = ({ eyebrow, heading, sub, children, wide = false }) => (
           className="pointer-events-none absolute -bottom-16 right-0 h-64 w-64 rounded-full bg-brand-400/25 blur-3xl"
         />
 
-        <Logo size="lg" className="animate-floaty self-start" />
+        <Logo size="lg" tone="light" className="animate-floaty self-start" />
 
         <div className="relative mt-10">
           <motion.p

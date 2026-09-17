@@ -1,29 +1,55 @@
-import { lazy, Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-// Layout (keep standard import or lazy load as needed)
 import DashboardLayout from './components/DashboardLayout';
+import { ScreenSpinner } from './components/PageSkeleton';
+import {
+  Login, Register, Dashboard, Investors, Entrepreneurs, Payment,
+  Messages, Notifications, Reports, ActivityLogs, Settings,
+  preloadAllRoutes,
+} from './routes';
 
-// Dynamically imported components
-const Login = lazy(() => import('./pages/auth/Login'));
-const Register = lazy(() => import('./pages/auth/Register'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Investors = lazy(() => import('./pages/Investors'));
-const Entrepreneurs = lazy(() => import('./pages/Entrepreneurs'));
-const Payment = lazy(() => import('./pages/Payment'));
-const Messages = lazy(() => import('./pages/Messages'));
-const Notifications = lazy(() => import('./pages/Notifications'));
-const Reports = lazy(() => import('./pages/Reports'));
-const ActivityLogs = lazy(() => import('./pages/ActivityLogs'));
-const Settings = lazy(() => import('./pages/Settings'));
+const App = () => {
+  // Fetch every page chunk once the browser goes idle after first paint, so a
+  // sidebar click renders the page in the same frame instead of waiting on a
+  // network round trip. See routes.js.
+  useEffect(() => {
+    preloadAllRoutes();
+  }, []);
 
-const App = () => (
-  <Suspense fallback={<div>Loading...</div>}>
+  return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register/investor" element={<Register role="investor" />} />
-      <Route path="/register/entrepreneur" element={<Register role="entrepreneur" />} />
+      {/* Auth screens sit outside the dashboard shell, so they carry their
+          own boundary. */}
+      <Route
+        path="/login"
+        element={
+          <Suspense fallback={<ScreenSpinner />}>
+            <Login />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/register/investor"
+        element={
+          <Suspense fallback={<ScreenSpinner />}>
+            <Register role="investor" />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/register/entrepreneur"
+        element={
+          <Suspense fallback={<ScreenSpinner />}>
+            <Register role="entrepreneur" />
+          </Suspense>
+        }
+      />
+      <Route path="/register" element={<Navigate to="/register/investor" replace />} />
 
+      {/* The shell stays mounted across every dashboard route — its own
+          Suspense boundary lives around the outlet inside DashboardLayout, so
+          the sidebar and topbar never blank out mid-navigation. */}
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/investors" element={<Investors />} />
@@ -39,7 +65,7 @@ const App = () => (
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
-  </Suspense>
-);
+  );
+};
 
 export default App;

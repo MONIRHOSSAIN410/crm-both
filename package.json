@@ -1,0 +1,29 @@
+{
+  "name": "muldhon",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Muldhon investment platform — React client + Express API deployed as one Vercel project",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "cd client && npm run build",
+    "vercel-build": "cd client && npm run build",
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "seed": "npm --prefix server run seed",
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.24.4",
+    "morgan": "^1.12.0"
+  }
+}

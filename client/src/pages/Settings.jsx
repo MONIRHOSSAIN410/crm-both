@@ -4,6 +4,7 @@ import { User, Lock, Bell, BadgeCheck, Camera, Trash2, Save, Loader2 } from 'luc
 import { fileToAvatarDataUrl, validateImage, ACCEPTED_TYPES } from '../utils/image';
 import api from '../api/axios';
 import { Card, Avatar } from '../components/ui/Bits';
+import VerificationPanel from '../components/settings/VerificationPanel';
 import { useAuth } from '../context/AuthContext';
 
 const TABS = [
@@ -337,28 +338,7 @@ const Settings = () => {
                 </div>
               )}
 
-              {tab === 'verification' && (
-                <div className="max-w-lg space-y-4">
-                  <div className="flex items-center gap-3 rounded-xl bg-brand-50 px-4 py-3.5">
-                    <BadgeCheck size={20} className="text-brand-600" />
-                    <div>
-                      <p className="text-[13.5px] font-semibold text-ink">
-                        {user?.verified ? 'Account verified' : 'Verification pending'}
-                      </p>
-                      <p className="text-[11.5px] text-ink-muted">
-                        Upload your NID and business documents to unlock escrow release.
-                      </p>
-                    </div>
-                  </div>
-                  {['National ID (front)', 'National ID (back)', 'Trade licence / TIN certificate'].map((doc) => (
-                    <div key={doc} className="flex items-center justify-between rounded-xl border border-dashed border-line px-4 py-3.5">
-                      <span className="text-[13px] text-ink-muted">{doc}</span>
-                      <button className="btn-ghost py-1.5 text-[11.5px]">Upload</button>
-                    </div>
-                  ))}
-                  <button className="btn-primary py-2.5 text-xs">Submit for review</button>
-                </div>
-              )}
+              {tab === 'verification' && <VerificationPanel flash={flash} />}
             </motion.div>
           </AnimatePresence>
         </Card>

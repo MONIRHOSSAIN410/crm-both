@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import PageSkeleton from './PageSkeleton';
 import { useAuth } from '../context/AuthContext';
 
 const DashboardLayout = () => {
@@ -27,17 +28,30 @@ const DashboardLayout = () => {
       <div className="lg:pl-[236px]">
         <Topbar onMenu={() => setOpen(true)} />
         <main className="px-4 pb-10 pt-4 sm:px-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-            >
+          {/*
+            No AnimatePresence here on purpose.
+
+            `AnimatePresence mode="wait"` held the outgoing page on screen for
+            the whole length of its exit animation before mounting the next
+            one, so every sidebar click cost ~300ms of nothing happening. The
+            new page now mounts immediately and fades up on its own; `key` on
+            the path still restarts the animation per route, and scroll
+            position resets because the subtree is replaced.
+
+            The Suspense boundary sits here rather than around the whole app,
+            so a chunk that has not been warmed yet swaps only the content
+            area — the sidebar and topbar stay put.
+          */}
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.16, ease: 'easeOut' }}
+          >
+            <Suspense fallback={<PageSkeleton />}>
               <Outlet />
-            </motion.div>
-          </AnimatePresence>
+            </Suspense>
+          </motion.div>
         </main>
       </div>
     </div>

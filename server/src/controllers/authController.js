@@ -127,6 +127,137 @@ export const updateMe = asyncHandler(async (req, res) => {
   res.json({ success: true, user: sanitizeUser(updated) });
 });
 
+/**
+ * Which documents the platform asks for, and what each one is called.
+ *
+ * Kept on the server so the list is authoritative: an upload with an unknown
+ * key is rejected rather than quietly stored, and the label shown in the
+ * dashboard cannot be set by whoever is uploading.
+ */
+export const VERIFICATION_DOCS = [
+  { key: 'nid-front', label: 'National ID (front)' },
+  { key: 'nid-back', label: 'National ID (back)' },
+  { key: 'trade-licence', label: 'Trade licence / TIN certificate' },
+];
+
+// A data URL is ~4/3 the size of the file behind it. 3.2 MB of base64 keeps a
+// three-document payload inside the 5 MB body limit set in app.js.
+const MAX_DOC_DATA_URL = 3.2 * 1024 * 1024;
+
+// @desc    The signed-in user's verification documents, files included
+// @route   GET /api/auth/verification
+// @access  Private
+export const getVerification = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select(
+    'verificationDocs verificationStatus verificationNote verificationSubmittedAt verified'
+  );
+
+  res.json({
+    success: true,
+    required: VERIFICATION_DOCS,
+    status: user?.verified ? 'approved' : user?.verificationStatus || 'unverified',
+    note: user?.verificationNote || '',
+    submittedAt: user?.verificationSubmittedAt || null,
+    documents: user?.verificationDocs || [],
+  });
+});
+
+// @desc    Upload / replace one verification document
+// @route   PUT /api/auth/verification
+// @access  Private
+export const uploadVerificationDoc = asyncHandler(async (req, res) => {
+  const { key, dataUrl, fileName = '', fileType = '', fileSize = 0 } = req.body;
+
+  const known = VERIFICATION_DOCS.find((d) => d.key === key);
+  if (!known) {
+    res.status(400);
+    throw new Error('Unknown document type');
+  }
+  if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) {
+    res.status(400);
+    throw new Error('No file was received. Please choose a file and try again.');
+  }
+  if (dataUrl.length > MAX_DOC_DATA_URL) {
+    res.status(413);
+    throw new Error('That file is too large. Please upload a file under 2 MB.');
+  }
+
+  const user = req.user;
+  const docs = (user.verificationDocs || []).filter((d) => d.key !== key);
+  docs.push({
+    key,
+    label: known.label,
+    fileName: String(fileName).slice(0, 180),
+    fileType,
+    fileSize: Number(fileSize) || 0,
+    dataUrl,
+    uploadedAt: new Date(),
+  });
+
+  user.verificationDocs = docs;
+  // Replacing a document after a review restarts the review.
+  if (user.verificationStatus !== 'approved') user.verificationStatus = 'unverified';
+
+  const updated = await user.save();
+  // The full documents list comes back too, so the Verification screen can
+  // show the new thumbnail without a second request.
+  res.json({
+    success: true,
+    user: sanitizeUser(updated),
+    documents: updated.verificationDocs,
+  });
+});
+
+// @desc    Remove one verification document
+// @route   DELETE /api/auth/verification/:key
+// @access  Private
+export const deleteVerificationDoc = asyncHandler(async (req, res) => {
+  const user = req.user;
+  user.verificationDocs = (user.verificationDocs || []).filter((d) => d.key !== req.params.key);
+  if (user.verificationStatus !== 'approved') user.verificationStatus = 'unverified';
+  const updated = await user.save();
+  res.json({
+    success: true,
+    user: sanitizeUser(updated),
+    documents: updated.verificationDocs,
+  });
+});
+
+// @desc    Submit the uploaded documents for review
+// @route   POST /api/auth/verification/submit
+// @access  Private
+export const submitVerification = asyncHandler(async (req, res) => {
+  const user = req.user;
+  const uploaded = new Set((user.verificationDocs || []).map((d) => d.key));
+  const missing = VERIFICATION_DOCS.filter((d) => !uploaded.has(d.key));
+
+  if (missing.length) {
+    res.status(400);
+    throw new Error(`Still missing: ${missing.map((d) => d.label).join(', ')}`);
+  }
+
+  user.verificationStatus = 'submitted';
+  user.verificationSubmittedAt = new Date();
+  user.verificationNote = '';
+  const updated = await user.save();
+
+  await Activity.create({
+    user: user._id,
+    userName: user.fullName,
+    userEmail: user.email,
+    activity: 'Verification documents submitted',
+    module: 'Accounts',
+    status: 'Pending',
+    description: `${user.fullName} submitted ${user.verificationDocs.length} documents for verification.`,
+  });
+
+  res.json({
+    success: true,
+    user: sanitizeUser(updated),
+    documents: updated.verificationDocs,
+  });
+});
+
 // @desc    Change password
 // @route   PUT /api/auth/password
 // @access  Private

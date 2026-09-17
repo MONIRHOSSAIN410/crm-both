@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import Logo from './ui/Logo';
 import { useAuth } from '../context/AuthContext';
+import { preloadRoute } from '../routes';
 
 export const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,6 +27,16 @@ const NavList = ({ onNavigate }) => (
         key={to}
         to={to}
         onClick={onNavigate}
+        /*
+          Warm the page's chunk the moment the pointer arrives — and again on
+          press, which covers touch, where there is no hover. By the time the
+          click registers the module is already loaded, so the page renders
+          straight away instead of flashing a loader.
+        */
+        onMouseEnter={() => preloadRoute(to)}
+        onFocus={() => preloadRoute(to)}
+        onTouchStart={() => preloadRoute(to)}
+        onPointerDown={() => preloadRoute(to)}
         className={({ isActive }) =>
           `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition ${
             isActive ? 'text-white' : 'text-white/65 hover:bg-white/10 hover:text-white'
@@ -38,7 +49,7 @@ const NavList = ({ onNavigate }) => (
               <motion.span
                 layoutId="side-active"
                 className="absolute inset-0 rounded-xl bg-white/15 ring-1 ring-white/15"
-                transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 40 }}
               />
             )}
             <Icon size={17} strokeWidth={1.9} className="relative z-10 shrink-0" />
@@ -56,7 +67,7 @@ const Sidebar = ({ open, onClose }) => {
   const Panel = ({ mobile = false }) => (
     <div className="flex h-full flex-col bg-deep-green py-5 text-white">
       <div className="flex items-center justify-between px-5 pb-6">
-        <Logo size="sm" />
+        <Logo size="sm" tone="light" animate={false} />
         {mobile && (
           <button onClick={onClose} aria-label="Close menu" className="rounded-lg p-1.5 hover:bg-white/10">
             <X size={18} />

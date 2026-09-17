@@ -3,7 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="apple-touch-icon" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0A3A28" />
+    <meta
+      name="description"
+      content="Muldhon — investment admin platform for investors, entrepreneurs and escrow payments."
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -11,9 +17,34 @@
       rel="stylesheet"
     />
     <title>Muldhon — Investment Admin</title>
+    <style>
+      /* Painted before React boots so the first frame is the brand, not a
+         white flash. Removed as soon as the app mounts. */
+      #boot {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #f4f7f5;
+      }
+      #boot span {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        border: 3px solid #d7f4e1;
+        border-top-color: #12904d;
+        animation: boot-spin 0.7s linear infinite;
+      }
+      @keyframes boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="boot"><span></span></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

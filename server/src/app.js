@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 
 import { connectDB, describeMongoUri } from './config/db.js';
+import { VERIFICATION_DOCS } from './controllers/authController.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
@@ -65,6 +66,12 @@ if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
 // Registered before the database gate so it answers even when Mongo is down.
 app.get('/api/health', (req, res) =>
   res.json({ success: true, service: 'Muldhon API', time: new Date().toISOString() })
+);
+
+// The list of documents verification asks for is a constant, not a query, so
+// it belongs in front of the database gate too.
+app.get('/api/auth/verification/required', (req, res) =>
+  res.json({ success: true, documents: VERIFICATION_DOCS })
 );
 
 /**

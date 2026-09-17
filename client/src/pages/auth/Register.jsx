@@ -40,28 +40,46 @@ const Field = ({ icon: Icon, label, required, children }) => (
   </div>
 );
 
-/** Male / Female picker. The choice is saved on the account and decides the
- *  default profile photo, so a female account never shows a male avatar. */
-const GenderPicker = ({ value, onChange, disabled }) => (
-  <div className="grid grid-cols-2 gap-2.5">
+/**
+ * Male / Female radio group.
+ *
+ * Real `<input type="radio">` elements in a single named group, so the choice
+ * behaves the way people expect a gender field to behave: exactly one can be
+ * on, arrow keys move between them, screen readers announce the group, and the
+ * browser's own "please choose one" validation applies. The card around each
+ * radio is just a label, so clicking anywhere on it selects.
+ *
+ * The choice is saved on the account and decides the default profile photo, so
+ * a female account never shows a male avatar.
+ */
+const GenderRadios = ({ value, onChange, disabled }) => (
+  <div role="radiogroup" aria-label="Gender" className="grid grid-cols-2 gap-2.5">
     {['male', 'female'].map((g) => {
       const active = value === g;
       return (
-        <button
+        <label
           key={g}
-          type="button"
-          disabled={disabled}
-          onClick={() => onChange(g)}
-          aria-pressed={active}
-          className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-[13px] font-semibold capitalize transition disabled:opacity-60 ${
+          className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-[13px] font-semibold capitalize transition ${
+            disabled ? 'cursor-not-allowed opacity-60' : ''
+          } ${
             active
               ? 'border-brand-500 bg-brand-50 text-brand-700 ring-1 ring-brand-500'
               : 'border-line bg-white text-ink-muted hover:bg-brand-50/50'
           }`}
         >
+          <input
+            type="radio"
+            name="gender"
+            value={g}
+            required
+            checked={active}
+            disabled={disabled}
+            onChange={() => onChange(g)}
+            className="h-4 w-4 shrink-0 accent-brand-600"
+          />
           <img src={defaultAvatar(g)} alt="" className="h-7 w-7 rounded-full" />
           {g}
-        </button>
+        </label>
       );
     })}
   </div>
@@ -140,7 +158,7 @@ const Register = ({ role = 'investor' }) => {
               Gender
               <span className="ml-0.5 text-rose-500">*</span>
             </label>
-            <GenderPicker
+            <GenderRadios
               value={form.gender}
               disabled={busy}
               onChange={(g) => setForm({ ...form, gender: g })}
