@@ -2,18 +2,19 @@
   "name": "muldhon",
   "private": true,
   "version": "1.0.0",
-  "description": "Muldhon investment platform — React client + Express API deployed as one Vercel project",
+  "description": "Muldhon investment platform \u2014 React client + Express API deployed as one Vercel project",
   "type": "module",
   "engines": {
     "node": ">=18"
   },
-  "//": "vercel-build is what @vercel/static-build runs (see vercel.json). It installs the client's own dependencies first, because Vercel only installs THIS package.json's dependencies — those are the API's, and they are what the api/index.js function gets bundled with. --include=dev is belt-and-braces: it keeps the build working even if NODE_ENV=production is set on the project, which is what makes npm skip build tools and produce 'vite: command not found'.",
+  "//": "vercel-build is what @vercel/static-build runs (see vercel.json). It installs the client's own dependencies first, because Vercel only installs THIS package.json's dependencies \u2014 those are the API's, and they are what the api/index.js function gets bundled with. --include=dev is belt-and-braces: it keeps the build working even if NODE_ENV=production is set on the project, which is what makes npm skip build tools and produce 'vite: command not found'.",
   "scripts": {
     "build": "npm install --prefix client --include=dev --no-audit --no-fund && npm run build --prefix client",
     "vercel-build": "npm run build",
     "dev:client": "npm --prefix client run dev",
     "dev:server": "npm --prefix server run dev",
     "seed": "npm --prefix server run seed",
+    "check:db": "npm --prefix server run check:db",
     "install:all": "npm install && npm install --prefix client && npm install --prefix server"
   },
   "dependencies": {

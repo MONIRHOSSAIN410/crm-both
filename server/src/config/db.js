@@ -22,6 +22,53 @@ export const describeMongoUri = () => {
 };
 
 /**
+ * Turn a driver error into a sentence that names the actual fix.
+ *
+ * Every database failure used to surface as the same line ("Database
+ * unavailable, open /api/health/db"), which meant the person seeing it on the
+ * register form still had to go and look somewhere else. The driver already
+ * knows which of the four things went wrong; this reads it out.
+ */
+export const explainDbError = (error) => {
+  const uri = describeMongoUri();
+  const message = String(error?.message || '');
+
+  if (!uri.configured) {
+    return 'MONGO_URI is not set on the server. Add it to server/.env locally, or to the Vercel project’s Environment Variables, then restart or redeploy.';
+  }
+
+  if (uri.isLocal && process.env.VERCEL) {
+    return 'MONGO_URI points at localhost, which a deployed server can never reach. Use a MongoDB Atlas connection string (mongodb+srv://...).';
+  }
+
+  if (/bad auth|Authentication failed|auth failed|SCRAM/i.test(message)) {
+    return 'The database username or password in MONGO_URI is wrong. Check the user under Atlas → Database Access. A password containing @ : / ? or # must be URL-encoded.';
+  }
+
+  if (/ENOTFOUND|EAI_AGAIN|querySrv|getaddrinfo/i.test(message)) {
+    return `The database host (${uri.host}) could not be resolved. Check MONGO_URI for a typo, and that this machine has working DNS.`;
+  }
+
+  if (/IP|whitelist|not allowed/i.test(message)) {
+    return 'Atlas is refusing this server’s IP address. Open Atlas → Network Access and allow 0.0.0.0/0 (a serverless function has no fixed IP to allow-list).';
+  }
+
+  if (/ECONNREFUSED/i.test(message)) {
+    return uri.isLocal
+      ? `Nothing is listening at ${uri.host}. Start MongoDB locally, or point MONGO_URI at an Atlas cluster.`
+      : `${uri.host} refused the connection.`;
+  }
+
+  if (/timed out|timeout|ETIMEDOUT|Server selection/i.test(message)) {
+    return uri.kind === 'atlas'
+      ? `Could not reach ${uri.host} in time. Two usual causes: Atlas → Network Access does not allow this server (use 0.0.0.0/0), or this network blocks outbound port 27017. Run "npm run check:db" in the server folder to tell the two apart.`
+      : `${uri.host} did not answer in time. Confirm MongoDB is running and reachable from here.`;
+  }
+
+  return `Database error: ${message}`;
+};
+
+/**
  * Serverless-safe connection.
  *
  * On Vercel every request may hit a cold or warm lambda. Without caching,

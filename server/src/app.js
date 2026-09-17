@@ -3,7 +3,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 
-import { connectDB, describeMongoUri } from './config/db.js';
+import { connectDB, describeMongoUri, explainDbError } from './config/db.js';
 import { VERIFICATION_DOCS } from './controllers/authController.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -119,9 +119,7 @@ app.get('/api/health/db', async (req, res) => {
       uri,
       ms: Date.now() - started,
       error: error.message,
-      hint: uri.kind === 'atlas'
-        ? 'Atlas refused or timed out. Check Atlas → Network Access allows 0.0.0.0/0, and that the database user and password in MONGO_URI are correct (a password with @ : / ? # must be URL-encoded).'
-        : 'The database did not answer in time. Confirm the server is running and reachable from here.',
+      hint: explainDbError(error),
     });
   }
 });
@@ -138,10 +136,12 @@ app.use('/api', async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Database connection failed:', error.message);
+    // Say what is actually wrong, right here. Sending people off to another
+    // URL to find out why their login failed is a poor way to report an error.
     res.status(503).json({
       success: false,
-      message:
-        'Database unavailable. Open /api/health/db for the exact reason — usually MONGO_URI still points at localhost, or Atlas Network Access is not open to this server.',
+      message: explainDbError(error),
+      detail: error.message,
     });
   }
 });
