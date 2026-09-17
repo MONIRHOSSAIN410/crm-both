@@ -1,75 +1,64 @@
 /**
  * The Muldhon mark.
  *
- * "মূলধন" means capital — the money that is put to work rather than spent —
- * so the mark is a coin with a growth arrow rising out of it: the deep green
- * of the brand for the coin, the gold accent for the value it carries. It is
- * drawn as inline SVG rather than an emoji so it keeps its colour and weight
- * on every platform, scales to any size, and can be reused as the favicon.
+ * "মূলধন" means capital — money kept working rather than spent — so the mark is
+ * a stack of coins whose top coin doubles as the base of a rising column. Read
+ * one way it is savings; read the other it is growth. The gold sits only on the
+ * top coin and the rising bar, so the eye lands on the part that grows.
+ *
+ * Drawn as inline SVG rather than an emoji, so the colour and weight are the
+ * same on every platform, it scales to any size, and the same geometry can be
+ * reused for the favicon.
  */
-const LogoMark = ({ size = 32, className = '', title = 'Muldhon' }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 48 48"
-    fill="none"
-    role="img"
-    aria-label={title}
-    className={className}
-  >
-    <defs>
-      <linearGradient id="mdn-coin" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#1EA65C" />
-        <stop offset="0.55" stopColor="#12904D" />
-        <stop offset="1" stopColor="#0A3A28" />
-      </linearGradient>
-      <linearGradient id="mdn-gold" x1="14" y1="30" x2="36" y2="14" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#F9E36B" />
-        <stop offset="1" stopColor="#EFC42B" />
-      </linearGradient>
-    </defs>
+const LogoMark = ({ size = 32, className = '', title = 'Muldhon' }) => {
+  // Unique gradient ids: two marks on one page must not share a <defs> id, or
+  // the second silently paints with the first one's gradient.
+  const uid = `mdn-${size}`;
 
-    {/* Coin body */}
-    <rect x="2" y="2" width="44" height="44" rx="13" fill="url(#mdn-coin)" />
-    <rect
-      x="2"
-      y="2"
-      width="44"
-      height="44"
-      rx="13"
-      stroke="#ffffff"
-      strokeOpacity="0.18"
-      strokeWidth="1.5"
-    />
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill="none"
+      role="img"
+      aria-label={title}
+      className={className}
+    >
+      <defs>
+        <linearGradient id={`${uid}-bg`} x1="4" y1="2" x2="44" y2="46" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#1EA65C" />
+          <stop offset="0.5" stopColor="#12904D" />
+          <stop offset="1" stopColor="#0A3A28" />
+        </linearGradient>
+        <linearGradient id={`${uid}-gold`} x1="16" y1="34" x2="34" y2="10" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#F5D547" />
+          <stop offset="1" stopColor="#FCEFA8" />
+        </linearGradient>
+        <linearGradient id={`${uid}-sheen`} x1="10" y1="4" x2="26" y2="26" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#ffffff" stopOpacity="0.28" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+        </linearGradient>
+      </defs>
 
-    {/* Inner rim, the way a struck coin catches light */}
-    <circle cx="24" cy="24" r="16.5" stroke="#ffffff" strokeOpacity="0.16" strokeWidth="1.4" />
+      {/* Rounded-square badge */}
+      <rect x="2" y="2" width="44" height="44" rx="14" fill={`url(#${uid}-bg)`} />
+      {/* Light catching the top-left corner, so the badge reads as a surface */}
+      <path d="M2 16C2 8.3 8.3 2 16 2h16L2 32V16Z" fill={`url(#${uid}-sheen)`} />
 
-    {/* Growth arrow: capital compounding */}
-    <path
-      d="M13.5 30.5 L20 24 L25 29 L34 19.5"
-      stroke="url(#mdn-gold)"
-      strokeWidth="3.1"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M27.5 18.5 H35 V26"
-      stroke="url(#mdn-gold)"
-      strokeWidth="3.1"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+      {/* Two coins at rest — the principal */}
+      <ellipse cx="24" cy="35.5" rx="12" ry="4.2" fill="#ffffff" fillOpacity="0.22" />
+      <ellipse cx="24" cy="30.5" rx="12" ry="4.2" fill="#ffffff" fillOpacity="0.34" />
 
-    {/* Base line: the principal the growth stands on */}
-    <path
-      d="M13.5 35.5 H34.5"
-      stroke="#ffffff"
-      strokeOpacity="0.45"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-    />
-  </svg>
-);
+      {/* The top coin, in gold: the capital that is put to work */}
+      <ellipse cx="24" cy="25.5" rx="12" ry="4.2" fill={`url(#${uid}-gold)`} />
+
+      {/* Rising column, growing out of the gold coin */}
+      <rect x="15.5" y="19" width="4.6" height="5" rx="2.3" fill="#ffffff" fillOpacity="0.85" />
+      <rect x="21.7" y="14" width="4.6" height="10" rx="2.3" fill="#ffffff" fillOpacity="0.92" />
+      <rect x="27.9" y="8.5" width="4.6" height="15.5" rx="2.3" fill={`url(#${uid}-gold)`} />
+    </svg>
+  );
+};
 
 export default LogoMark;

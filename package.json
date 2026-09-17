@@ -7,9 +7,10 @@
   "engines": {
     "node": ">=18"
   },
+  "//": "vercel-build is what @vercel/static-build runs (see vercel.json). It installs the client's own dependencies first, because Vercel only installs THIS package.json's dependencies — those are the API's, and they are what the api/index.js function gets bundled with. --include=dev is belt-and-braces: it keeps the build working even if NODE_ENV=production is set on the project, which is what makes npm skip build tools and produce 'vite: command not found'.",
   "scripts": {
-    "build": "cd client && npm run build",
-    "vercel-build": "cd client && npm run build",
+    "build": "npm install --prefix client --include=dev --no-audit --no-fund && npm run build --prefix client",
+    "vercel-build": "npm run build",
     "dev:client": "npm --prefix client run dev",
     "dev:server": "npm --prefix server run dev",
     "seed": "npm --prefix server run seed",
