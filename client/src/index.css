@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-canvas text-ink font-sans;
+  }
+  * {
+    @apply border-line;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-line/70;
+  }
+  .card-pad {
+    @apply p-4 sm:p-5;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink
+      placeholder:text-ink-soft outline-none transition
+      focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10;
+  }
+  .label {
+    @apply mb-1.5 flex items-center gap-1.5 text-[13px] font-medium text-ink/80;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
+      focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700 shadow-soft;
+  }
+  .btn-ghost {
+    @apply btn border border-line bg-white text-ink hover:bg-brand-50;
+  }
+  .btn-sun {
+    @apply btn bg-sun-400 text-ink hover:bg-sun-500;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold;
+  }
+  .section-title {
+    @apply text-[15px] font-semibold text-ink;
+  }
+  .section-sub {
+    @apply text-xs text-ink-muted;
+  }
+  .scroll-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-brand-200;
+  }
+  .scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+.bn {
+  font-family: 'Hind Siliguri', 'Inter', sans-serif;
+}
+
+.recharts-surface:focus {
+  outline: none;
+}
