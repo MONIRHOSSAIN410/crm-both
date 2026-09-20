@@ -12,6 +12,18 @@
   * {
     @apply border-line;
   }
+  /* Grid items default to min-width:auto, so a wide table inside a card
+     (min-width 520–720px) stretched its grid track — and with it the whole
+     page — past the phone screen. The page then panned sideways and the
+     sticky top bar slid away while scrolling. Letting grid items shrink keeps
+     the overflow inside each table's own horizontal scroller. */
+  .grid > * {
+    min-width: 0;
+  }
+  html,
+  body {
+    overflow-x: clip;
+  }
 }
 
 @layer components {

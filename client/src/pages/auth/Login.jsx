@@ -68,7 +68,11 @@ const Login = () => {
               <Mail size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-soft" />
               <input
                 id="email"
+                name="email"
                 type="email"
+                autoComplete="username"
+                inputMode="email"
+                autoCapitalize="none"
                 required
                 disabled={busy}
                 className="input pl-10 disabled:opacity-60"
@@ -87,6 +91,7 @@ const Login = () => {
               <Lock size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-soft" />
               <input
                 id="password"
+                name="password"
                 type={show ? 'text' : 'password'}
                 required
                 autoComplete="current-password"
