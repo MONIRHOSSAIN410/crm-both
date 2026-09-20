@@ -31,6 +31,7 @@ export const Notifications = withPreload(() => import('./pages/Notifications'));
 export const Reports = withPreload(() => import('./pages/Reports'));
 export const ActivityLogs = withPreload(() => import('./pages/ActivityLogs'));
 export const Settings = withPreload(() => import('./pages/Settings'));
+export const SuperDashboard = withPreload(() => import('./pages/SuperDashboard'));
 
 /** Path → chunk, so a nav link can warm exactly the page it points at. */
 export const routePreloaders = {
@@ -46,6 +47,7 @@ export const routePreloaders = {
   '/reports': Reports.preload,
   '/activity': ActivityLogs.preload,
   '/settings': Settings.preload,
+  '/super': SuperDashboard.preload,
 };
 
 /** Warm one route's chunk. Safe to call as often as you like. */

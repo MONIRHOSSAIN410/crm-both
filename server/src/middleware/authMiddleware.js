@@ -32,7 +32,9 @@ export const protect = asyncHandler(async (req, res, next) => {
 export const authorize =
   (...roles) =>
   (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    // The super admin can do everything an admin can, and more.
+    const allowed = req.user && (req.user.role === 'superadmin' || roles.includes(req.user.role));
+    if (!allowed) {
       res.status(403);
       throw new Error(`Role "${req.user?.role || 'guest'}" is not allowed to access this resource`);
     }
@@ -40,3 +42,4 @@ export const authorize =
   };
 
 export const adminOnly = authorize('admin');
+export const superOnly = authorize('superadmin');

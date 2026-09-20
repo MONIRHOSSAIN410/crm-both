@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import Activity from '../models/Activity.js';
@@ -80,6 +81,52 @@ export const register = asyncHandler(async (req, res) => {
   res.status(201).json(buildAuthResponse(user));
 });
 
+/**
+ * Super admin sign-in.
+ *
+ * The super admin logs in with a plain ID and password rather than an email:
+ * `admin@gmail.com` / `admin123` unless SUPER_ADMIN_ID / SUPER_ADMIN_PASSWORD
+ * are set in the environment (the environment values win when present).
+ *
+ * The credentials are checked against the environment, not the database, so
+ * there is nothing to seed. On first sign-in a `superadmin` account document is
+ * created (with a random, unusable password hash) so the rest of the API —
+ * tokens, `protect`, activity logs — treats it like any other user.
+ */
+const SUPER_EMAIL = 'superadmin@muldhon.app';
+
+const safeEqual = (a, b) => {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+};
+
+const isSuperLogin = (id, password) => {
+  const superId = String(process.env.SUPER_ADMIN_ID || 'admin@gmail.com').trim().toLowerCase();
+  const superPassword = String(process.env.SUPER_ADMIN_PASSWORD || 'admin123');
+  return safeEqual(String(id).trim().toLowerCase(), superId) && safeEqual(password, superPassword);
+};
+
+const findOrCreateSuperAdmin = async () => {
+  let user = await User.findOne({ role: 'superadmin' });
+  if (!user) {
+    // Use the sign-in email for the account when it is free; if a normal
+    // account already owns it, fall back to an internal address so the two
+    // never collide.
+    const wanted = String(process.env.SUPER_ADMIN_ID || 'admin@gmail.com').trim().toLowerCase();
+    const taken = /^\S+@\S+\.\S+$/.test(wanted) ? await User.exists({ email: wanted }) : true;
+    user = await User.create({
+      fullName: 'Super Admin',
+      email: taken ? SUPER_EMAIL : wanted,
+      password: crypto.randomBytes(24).toString('hex'),
+      role: 'superadmin',
+      status: 'active',
+      verified: true,
+    });
+  }
+  return user;
+};
+
 // @desc    Login
 // @route   POST /api/auth/login
 // @access  Public
@@ -88,6 +135,23 @@ export const login = asyncHandler(async (req, res) => {
   if (!email || !password) {
     res.status(400);
     throw new Error('Email and password are required');
+  }
+
+  if (isSuperLogin(email, password)) {
+    const superUser = await findOrCreateSuperAdmin();
+    superUser.online = true;
+    await superUser.save({ validateBeforeSave: false });
+    await Activity.create({
+      user: superUser._id,
+      userName: superUser.fullName,
+      userEmail: superUser.email,
+      activity: 'Super admin signed in',
+      module: 'System',
+      status: 'Success',
+      isAdminAction: true,
+      description: 'The super admin opened the super dashboard.',
+    });
+    return res.json(buildAuthResponse(superUser));
   }
 
   const user = await User.findOne({ email: String(email).trim().toLowerCase() }).select('+password');

@@ -1,4 +1,4 @@
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Sidebar from './Sidebar';
@@ -10,6 +10,12 @@ const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { user, loading } = useAuth();
+
+  // Whatever changed the page — a nav link, the bell, the avatar, the back
+  // button — the mobile drawer should not still be open on the new one.
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
 
   if (loading) {
     return (

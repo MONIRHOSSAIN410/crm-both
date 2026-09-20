@@ -25,7 +25,7 @@ const Login = () => {
     try {
       const res = await login(form.email, form.password);
       if (res?.ok) {
-        navigate('/dashboard');
+        navigate(res.user?.role === 'superadmin' ? '/super' : '/dashboard', { replace: true });
       } else {
         setError(res?.message || 'Login failed. Please check your credentials.');
       }
@@ -62,14 +62,14 @@ const Login = () => {
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div>
             <label className="label" htmlFor="email">
-              Email
+              Email or ID
             </label>
             <div className="relative">
               <Mail size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-soft" />
               <input
                 id="email"
                 name="email"
-                type="email"
+                type="text"
                 autoComplete="username"
                 inputMode="email"
                 autoCapitalize="none"

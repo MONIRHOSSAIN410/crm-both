@@ -5,7 +5,7 @@ import DashboardLayout from './components/DashboardLayout';
 import { ScreenSpinner } from './components/PageSkeleton';
 import {
   Login, Register, Dashboard, Investors, Entrepreneurs, Payment,
-  Messages, Notifications, Reports, ActivityLogs, Settings,
+  Messages, Notifications, Reports, ActivityLogs, Settings, SuperDashboard,
   preloadAllRoutes,
 } from './routes';
 
@@ -60,6 +60,7 @@ const App = () => {
         <Route path="/reports" element={<Reports />} />
         <Route path="/activity" element={<ActivityLogs />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/super" element={<SuperDashboard />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

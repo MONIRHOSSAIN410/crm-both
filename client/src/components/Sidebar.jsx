@@ -1,8 +1,8 @@
 import { NavLink } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Users, Briefcase, Wallet, MessagesSquare, Bell,
-  BarChart3, ScrollText, Settings, X, LogOut,
+  BarChart3, ScrollText, Settings, X, LogOut, ShieldCheck,
 } from 'lucide-react';
 import Logo from './ui/Logo';
 import { useAuth } from '../context/AuthContext';
@@ -20,9 +20,12 @@ export const navItems = [
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
-const NavList = ({ onNavigate }) => (
+/** Only the super admin sees this entry. */
+export const superItem = { to: '/super', label: 'Super Dashboard', icon: ShieldCheck };
+
+const NavList = ({ onNavigate, animated = true, isSuper = false }) => (
   <nav className="flex flex-1 flex-col gap-1 px-3">
-    {navItems.map(({ to, label, icon: Icon }) => (
+    {(isSuper ? [superItem, ...navItems] : navItems).map(({ to, label, icon: Icon }) => (
       <NavLink
         key={to}
         to={to}
@@ -45,12 +48,15 @@ const NavList = ({ onNavigate }) => (
       >
         {({ isActive }) => (
           <>
-            {isActive && (
+            {isActive && animated && (
               <motion.span
                 layoutId="side-active"
                 className="absolute inset-0 rounded-xl bg-white/15 ring-1 ring-white/15"
                 transition={{ type: 'spring', stiffness: 520, damping: 40 }}
               />
+            )}
+            {isActive && !animated && (
+              <span className="absolute inset-0 rounded-xl bg-white/15 ring-1 ring-white/15" />
             )}
             <Icon size={17} strokeWidth={1.9} className="relative z-10 shrink-0" />
             <span className="relative z-10">{label}</span>
@@ -61,11 +67,16 @@ const NavList = ({ onNavigate }) => (
   </nav>
 );
 
-const Sidebar = ({ open, onClose }) => {
+/**
+ * The panel lives at module level on purpose. It used to be declared inside
+ * Sidebar, which made it a brand-new component type on every render — React
+ * threw the whole drawer away and rebuilt it each time, and a tap that landed
+ * mid-rebuild was lost.
+ */
+const Panel = ({ mobile = false, onClose }) => {
   const { user, logout } = useAuth();
-
-  const Panel = ({ mobile = false }) => (
-    <div className="flex h-full flex-col bg-deep-green py-5 text-white">
+  return (
+    <div className="flex h-full flex-col overflow-y-auto bg-deep-green py-5 text-white">
       <div className="flex items-center justify-between px-5 pb-6">
         <Logo size="sm" tone="light" animate={false} />
         {mobile && (
@@ -75,7 +86,7 @@ const Sidebar = ({ open, onClose }) => {
         )}
       </div>
 
-      <NavList onNavigate={mobile ? onClose : undefined} />
+      <NavList onNavigate={mobile ? onClose : undefined} animated={!mobile} isSuper={user?.role === 'superadmin'} />
 
       <div className="mt-4 px-3">
         <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
@@ -91,37 +102,45 @@ const Sidebar = ({ open, onClose }) => {
       </div>
     </div>
   );
-
-  return (
-    <>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[236px] lg:block">
-        <Panel />
-      </aside>
-
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={onClose}
-              className="fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm lg:hidden"
-            />
-            <motion.aside
-              initial={{ x: -280 }}
-              animate={{ x: 0 }}
-              exit={{ x: -280 }}
-              transition={{ type: 'spring', stiffness: 340, damping: 34 }}
-              className="fixed inset-y-0 left-0 z-50 w-[264px] lg:hidden"
-            >
-              <Panel mobile />
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-    </>
-  );
 };
+
+/**
+ * Mobile drawer.
+ *
+ * It is always mounted and simply slides in and out. The previous version
+ * mounted it inside <AnimatePresence>, and on phones the exit never finished
+ * unmounting: the backdrop faded to opacity 0 but stayed on top of the page,
+ * an invisible sheet that swallowed every tap after the first navigation.
+ * Now, when closed, both layers get `pointer-events: none` and `invisible`,
+ * so nothing can sit over the page.
+ */
+const Sidebar = ({ open, onClose }) => (
+  <>
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[236px] lg:block">
+      <Panel />
+    </aside>
+
+    <div className="lg:hidden">
+      <motion.div
+        initial={false}
+        animate={{ opacity: open ? 1 : 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+        aria-hidden
+        className={`fixed inset-0 z-40 bg-ink/40 ${open ? '' : 'pointer-events-none invisible'}`}
+        style={{ transitionProperty: 'visibility', transitionDelay: open ? '0s' : '0.2s' }}
+      />
+      <motion.aside
+        initial={false}
+        animate={{ x: open ? 0 : -280 }}
+        transition={{ type: 'spring', stiffness: 340, damping: 34 }}
+        aria-hidden={!open}
+        className={`fixed inset-y-0 left-0 z-50 w-[264px] ${open ? '' : 'pointer-events-none'}`}
+      >
+        <Panel mobile onClose={onClose} />
+      </motion.aside>
+    </div>
+  </>
+);
 
 export default Sidebar;
